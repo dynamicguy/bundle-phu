@@ -1,4 +1,5 @@
 <?php
+
 /**
  * BundlePhu
  *
@@ -7,7 +8,7 @@
  * This source file is subject to the new BSD license that is bundled
  * with this package in the file LICENSE. This license can also be viewed
  * at http://hobodave.com/license.txt
- * 
+ *
  * @category    BundlePhu
  * @package     BundlePhu_View
  * @subpackage  Helper
@@ -25,7 +26,7 @@
  * @author      David Abdemoulaie <dave@hobodave.com>
  * @copyright   Copyright (c) 2010 David Abdemoulaie (http://hobodave.com/)
  * @license     http://hobodave.com/license.txt New BSD License
- **/
+ * */
 class BundlePhu_View_Helper_BundleScript extends Zend_View_Helper_HeadScript
 {
     /**
@@ -205,7 +206,7 @@ class BundlePhu_View_Helper_BundleScript extends Zend_View_Helper_HeadScript
      *
      * @param callback $callback
      * @return BundlePhu_View_Helper_BundleScript
-     **/
+     * */
     public function setMinifyCallback($callback)
     {
         $this->_minifyCallback = $callback;
@@ -257,7 +258,7 @@ class BundlePhu_View_Helper_BundleScript extends Zend_View_Helper_HeadScript
      *
      * @param int $level
      * @return BundlePhu_View_Helper_BundleScript
-     **/
+     * */
     public function setGzipLevel($level)
     {
         $this->_gzipLevel = $level;
@@ -269,7 +270,7 @@ class BundlePhu_View_Helper_BundleScript extends Zend_View_Helper_HeadScript
      *
      * @param int $encodingMode FORCE_GZIP|FORCE_DEFLATE
      * @return BundlePhu_View_Helper_BundleScript
-     **/
+     * */
     public function setGzipEncoding($encodingMode)
     {
         $this->_gzipEncoding = $encodingMode;
@@ -277,19 +278,19 @@ class BundlePhu_View_Helper_BundleScript extends Zend_View_Helper_HeadScript
     }
 
     /**
-     * Iterates over scripts, concatenating, optionally minifying, 
+     * Iterates over scripts, concatenating, optionally minifying,
      * optionally compressiong, and caching them.
-     * 
+     *
      * This detects updates to the source javascripts using filemtime.
      * A file with an mtime more recent than the mtime of the cached bundle will
      * invalidate the cached bundle.
-     * 
+     *
      * Modifications of captured scripts cannot be detected by this.
      * DONT USE DYNAMICALLY GENERATED CAPTURED SCRIPTS.
-     * 
-     * 
      *
-     * @param string $indent 
+     *
+     *
+     * @param string $indent
      * @return void
      * @throws UnexpectedValueException if item has no src attribute or contains no captured source
      */
@@ -311,7 +312,7 @@ class BundlePhu_View_Helper_BundleScript extends Zend_View_Helper_HeadScript
             if (isset($item->attributes['src'])) {
                 $src = $item->attributes['src'];
                 if ($this->_baseUrl && strpos($src, $this->_baseUrl) !== false) {
-                    $src =  substr($src, strlen($this->_baseUrl));
+                    $src = substr($src, strlen($this->_baseUrl));
                 }
 
                 $mtime = filemtime($this->_docRoot . $src);
@@ -334,13 +335,11 @@ class BundlePhu_View_Helper_BundleScript extends Zend_View_Helper_HeadScript
         $cacheTime = @filemtime($cacheFile);
         if (false === $cacheTime || $cacheTime < $mostrecent) {
             $data = $this->_getJsData();
-
             $this->_writeUncompressed($cacheFile, $data);
-
             if ($this->_doGzip) {
                 $this->_writeCompressed($cacheFile, $data);
             }
-            $cacheTime = filemtime($cacheFile);
+            $cacheTime = @filemtime($cacheFile);
         }
 
         $urlPath = "{$this->_baseUrl}/{$this->_urlPrefix}/bundle_{$hash}.js?{$cacheTime}";
@@ -362,11 +361,11 @@ class BundlePhu_View_Helper_BundleScript extends Zend_View_Helper_HeadScript
             if (isset($item->attributes['src'])) {
                 $src = $item->attributes['src'];
                 if ($this->_baseUrl && strpos($src, $this->_baseUrl) !== false) {
-                    $src =  substr($src, strlen($this->_baseUrl));
+                    $src = substr($src, strlen($this->_baseUrl));
                 }
 
                 echo file_get_contents($this->_docRoot . $src), PHP_EOL;
-            } else if (!empty($item->source)){
+            } else if (!empty($item->source)) {
                 echo $item->source, PHP_EOL;
             }
         }
@@ -389,10 +388,10 @@ class BundlePhu_View_Helper_BundleScript extends Zend_View_Helper_HeadScript
                 $data = call_user_func($this->_minifyCallback, $data);
                 file_put_contents($cacheFile, $data);
             } else if (!empty($this->_minifyCommand)) {
+                file_put_contents($cacheFile, $data);
                 $command = str_replace(':filename', $cacheFile, $this->_minifyCommand);
-                $handle = popen("$command" , 'w');
-                fwrite($handle, $data);
-                pclose($handle);
+                exec($command, $output);
+                file_put_contents($cacheFile, implode("", $output));
             } else {
                 throw new BadMethodCallException("Neither _minifyCommand or _minifyCallback are defined.");
             }

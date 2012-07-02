@@ -329,14 +329,16 @@ class BundlePhu_View_Helper_BundleLink extends Zend_View_Helper_HeadLink
             if ($this->_doGzip) {
                 $this->_writeCompressed($cacheFile, $data);
             }
-            $cacheTime = filemtime($cacheFile);
+            if (file_exists($cacheFile)) {
+                $cacheTime = filemtime($cacheFile);
+            }
         }
 
         $urlPath = "{$this->_baseUrl}/{$this->_urlPrefix}/bundle_{$hash}.css?{$cacheTime}";
         $ret = '<link href="' . $urlPath . '" media="screen" rel="stylesheet" type="text/css" />';
         return $ret;
     }
-    
+
     /**
      * undocumented function
      *
@@ -360,7 +362,7 @@ class BundlePhu_View_Helper_BundleLink extends Zend_View_Helper_HeadLink
         $data = ob_get_clean();
         return $data;
     }
-    
+
     /**
      * Writes uncompressed bundle to disk
      *
@@ -376,10 +378,10 @@ class BundlePhu_View_Helper_BundleLink extends Zend_View_Helper_HeadLink
                 $data = call_user_func($this->_minifyCallback, $data);
                 file_put_contents($cacheFile, $data);
             } else if (!empty($this->_minifyCommand)) {
+                file_put_contents($cacheFile, $data);
                 $command = str_replace(':filename', $cacheFile, $this->_minifyCommand);
-                $handle = popen("$command" , 'w');
-                fwrite($handle, $data);
-                pclose($handle);
+                exec($command, $output);
+                file_put_contents($cacheFile, implode("", $output));
             } else {
                 throw new BadMethodCallException("Neither _minifyCommand or _minifyCallback are defined.");
             }
